@@ -20,11 +20,11 @@ var settings = new GifskiSettings
 {
     Quality = 100
 };
-var gifski = new Gifski(settings, @"C:\Test\gifski.dll");
+using var gifski = new Gifski(settings, @"C:\Test\gifski.dll");
 gifski.SetFileOutput(@"C:\Test\animation.gif");
-gifski.AddFramePngFile(0, 0d, @"C:\Test\frame_1.gif");
-gifski.AddFramePngFile(1, 4d, @"C:\Test\frame_2.gif");
-gifski.AddFramePngFile(3, 6d, @"C:\Test\frame_3.gif");
+gifski.AddFramePngFile(0U, 0d, @"C:\Test\frame_1.gif");
+gifski.AddFramePngFile(1U, 4d, @"C:\Test\frame_2.gif");
+gifski.AddFramePngFile(3U, 6d, @"C:\Test\frame_3.gif");
 gifski.Finish();
 ```
 
