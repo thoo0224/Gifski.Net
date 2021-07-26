@@ -23,15 +23,12 @@ namespace GifskiNet
         /// </summary>
         public byte Quality
         {
-            get => _quality == 0 ? (byte)1 : _quality;
-            set
+            get => _quality;
+            set => _quality = value switch
             {
-                _quality = value switch
-                {
-                    > 100 => 100,
-                    _ => value
-                };
-            }
+                > 100 => 100,
+                _ => value
+            };
         }
 
         /// <summary>

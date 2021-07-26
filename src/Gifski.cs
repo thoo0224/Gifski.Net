@@ -23,7 +23,7 @@ namespace GifskiNet
         private readonly delegate* unmanaged[Cdecl]<IntPtr, GifskiError> _gifskiFinish;
 
         /// <summary>
-        /// Initialiyes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
+        /// Initializes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
         /// </summary>
         /// <param name="libraryPath">Path to the gifski binary.</param>
         /// <param name="settings">Optional <see cref="GifskiSettings"/> modifications.</param>
@@ -34,6 +34,7 @@ namespace GifskiNet
                 Quality = 90
             };
             settings?.Invoke(gifskiSettings);
+            if (gifskiSettings.Quality == 0) gifskiSettings.Quality = 90;
             return new Gifski(gifskiSettings, libraryPath);
         }
 
