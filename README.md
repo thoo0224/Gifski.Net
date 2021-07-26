@@ -16,11 +16,10 @@ A .NET 5 wrapper for Gifski
 ```cs
 using GifskiNet;
 
-var settings = new GifskiSettings
+using var gifski = Gifski.Create(@"C:\Test\gifski.dll", settings =>
 {
-    Quality = 100
-};
-using var gifski = new Gifski(settings, @"C:\Test\gifski.dll");
+    settings.Quality = 100;
+});
 gifski.SetFileOutput(@"C:\Test\animation.gif");
 gifski.AddFramePngFile(0U, 0d, @"C:\Test\frame_1.gif");
 gifski.AddFramePngFile(1U, 4d, @"C:\Test\frame_2.gif");
