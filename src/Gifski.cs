@@ -7,9 +7,10 @@ namespace GifskiNet
     {
 
         public delegate int ProgressCallback(IntPtr userData);
+        public delegate GifskiError WriteCallback(IntPtr bufferSize, IntPtr buffer, IntPtr userData);
 
         private readonly IntPtr _dllHandle;
-        private readonly IntPtr _objHandle;
+        private readonly IntPtr _gifskiHandle;
 
         private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, string, double, GifskiError> _gifskiAddFramePngFile;
         private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgba;
@@ -18,9 +19,25 @@ namespace GifskiNet
         private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgb;
         private readonly delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, void> _gifskiSetProgressCallback;
         private readonly delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError> _gifskiSetFileOutput;
+        private readonly delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError> _gifskiSetWriteCallback;
         private readonly delegate* unmanaged[Cdecl]<IntPtr, GifskiError> _gifskiFinish;
 
-        public Gifski(GifskiSettings settings, string libraryPath)
+        /// <summary>
+        /// Initialiyes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
+        /// </summary>
+        /// <param name="libraryPath">Path to the gifski binary.</param>
+        /// <param name="settings">Optional <see cref="GifskiSettings"/> modifications.</param>
+        public static Gifski Create(string libraryPath, Action<GifskiSettings> settings = null)
+        {
+            var gifskiSettings = new GifskiSettings
+            {
+                Quality = 90
+            };
+            settings?.Invoke(gifskiSettings);
+            return new Gifski(gifskiSettings, libraryPath);
+        }
+
+        internal Gifski(GifskiSettings settings, string libraryPath)
         {
             _dllHandle = NativeLibrary.Load(libraryPath);
 
@@ -38,76 +55,90 @@ namespace GifskiNet
                 NativeLibrary.GetExport(_dllHandle, "gifski_set_progress_callback");
             _gifskiSetFileOutput = (delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError>)
                 NativeLibrary.GetExport(_dllHandle, "gifski_set_file_output");
+            _gifskiSetWriteCallback = (delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError>)
+                NativeLibrary.GetExport(_dllHandle, "gifski_set_write_callback");
             _gifskiFinish = (delegate* unmanaged[Cdecl]<IntPtr, GifskiError>)
                 NativeLibrary.GetExport(_dllHandle, "gifski_finish");
 
             var gifskiNew = (delegate* unmanaged[Cdecl]<ref GifskiSettings, IntPtr>)
                 NativeLibrary.GetExport(_dllHandle, "gifski_new");
-            _objHandle = gifskiNew(ref settings);
-        }
-
-        ~Gifski()
-        {
-            Dispose();
+            _gifskiHandle = gifskiNew(ref settings);
         }
 
         public GifskiError AddFramePngFile(uint frameNumber, double presentationTimestamp, string filePath)
         {
-            return _gifskiAddFramePngFile(_objHandle, frameNumber, filePath, presentationTimestamp);
+            return _gifskiAddFramePngFile(_gifskiHandle, frameNumber, filePath, presentationTimestamp);
         }
 
         public GifskiError AddFrameRgba(uint frameNumber, double presentationTimestamp, uint width, uint height, byte[] pixels)
         {
-            return _gifskiAddFrameRgba(_objHandle, frameNumber, width, height, pixels, presentationTimestamp);
+            return _gifskiAddFrameRgba(_gifskiHandle, frameNumber, width, height, pixels, presentationTimestamp);
         }
 
         public GifskiError AddFrameArgb(uint frameNumber, double presentationTimestamp, uint width, uint height, byte[] pixels, uint bytesPerRow)
         {
-            return _gifskiAddFrameArgb(_objHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
+            return _gifskiAddFrameArgb(_gifskiHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
         }
 
         public GifskiError AddFrameRgbaStride(uint frameNumber, double presentationTimestamp, uint width, uint height, byte[] pixels, uint bytesPerRow)
         {
-            return _gifskiAddFrameRgbaStride(_objHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
+            return _gifskiAddFrameRgbaStride(_gifskiHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
         }
 
         public GifskiError AddFrameRgb(uint frameNumber, double presentationTimestamp, uint width, uint height, byte[] pixels, uint bytesPerRow)
         {
-            return _gifskiAddFrameRgb(_objHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
+            return _gifskiAddFrameRgb(_gifskiHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
         }
 
         public void SetProgressCallback(IntPtr userData, ProgressCallback callback)
         {
-            _gifskiSetProgressCallback(_objHandle, callback, userData);
+            _gifskiSetProgressCallback(_gifskiHandle, callback, userData);
         }
 
         public GifskiError SetFileOutput(string path)
         {
-            return _gifskiSetFileOutput(_objHandle, path);
+            return _gifskiSetFileOutput(_gifskiHandle, path);
+        }
+
+        public GifskiError SetWriteCallback(IntPtr userData, WriteCallback callback)
+        {
+            return _gifskiSetWriteCallback(_gifskiHandle, callback, userData);
         }
 
         public GifskiError Finish()
         {
-            return _gifskiFinish(_objHandle);
+            return _gifskiFinish(_gifskiHandle);
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposing)
-            {
-                return;
-            }
-
-            if (_dllHandle != IntPtr.Zero)
-            {
-                NativeLibrary.Free(_dllHandle);
-            }
-        }
+        public bool IsDisposed { get; private set; }
 
         public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (IsDisposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                if (_dllHandle != IntPtr.Zero)
+                {
+                    NativeLibrary.Free(_dllHandle);
+                }
+            }
+
+            IsDisposed = true;
+        }
+
+        ~Gifski()
+        {
+            Dispose(false);
         }
 
     }
