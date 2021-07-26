@@ -10,14 +10,14 @@
     <PackageTags>gifski</PackageTags>
     <PackageProjectUrl>https://gif.ski/</PackageProjectUrl>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <Authors>Thomas P.</Authors>
+    <Authors>Thomas P., NotOfficer</Authors>
     <Company></Company>
     <Copyright>Thomas P.</Copyright>
     <NeutralLanguage>en</NeutralLanguage>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>A .NET 5 wrapper for Gifski</Description>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
