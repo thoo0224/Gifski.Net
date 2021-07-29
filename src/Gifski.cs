@@ -29,16 +29,13 @@ namespace GifskiNet
         /// <param name="settings">Optional <see cref="GifskiSettings"/> modifications.</param>
         public static Gifski Create(string libraryPath, Action<GifskiSettings> settings = null)
         {
-            var gifskiSettings = new GifskiSettings
-            {
-                Quality = 90
-            };
+            var gifskiSettings = new GifskiSettings();
             settings?.Invoke(gifskiSettings);
             if (gifskiSettings.Quality == 0) gifskiSettings.Quality = 90;
             return new Gifski(gifskiSettings, libraryPath);
         }
 
-        internal Gifski(GifskiSettings settings, string libraryPath)
+        private Gifski(GifskiSettings settings, string libraryPath)
         {
             _dllHandle = NativeLibrary.Load(libraryPath);
 
@@ -61,9 +58,11 @@ namespace GifskiNet
             _gifskiFinish = (delegate* unmanaged[Cdecl]<IntPtr, GifskiError>)
                 NativeLibrary.GetExport(_dllHandle, "gifski_finish");
 
-            var gifskiNew = (delegate* unmanaged[Cdecl]<ref GifskiSettings, IntPtr>)
+            var gifskiNew = (delegate* unmanaged[Cdecl]<ref GifskiSettingsInternal, IntPtr>)
                 NativeLibrary.GetExport(_dllHandle, "gifski_new");
-            _gifskiHandle = gifskiNew(ref settings);
+
+            var internalSettings = new GifskiSettingsInternal(settings);
+            _gifskiHandle = gifskiNew(ref internalSettings);
         }
 
         public GifskiError AddFramePngFile(uint frameNumber, double presentationTimestamp, string filePath)

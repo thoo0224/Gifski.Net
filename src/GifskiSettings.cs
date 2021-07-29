@@ -2,8 +2,7 @@
 
 namespace GifskiNet
 {
-    [StructLayout(LayoutKind.Sequential, Pack = 1)]
-    public struct GifskiSettings
+    public class GifskiSettings
     {
 
         /// <summary>
@@ -24,11 +23,12 @@ namespace GifskiNet
         public byte Quality
         {
             get => _quality;
-            set => _quality = value switch
-            {
-                > 100 => 100,
-                _ => value
-            };
+            set =>
+                _quality = value switch
+                {
+                    > 100 => 100,
+                    _ => value
+                };
         }
 
         /// <summary>
@@ -40,6 +40,31 @@ namespace GifskiNet
         /// If negative, looping is disabled. The number of times the sequence is repeated. 0 to loop forever.
         /// </summary>
         public ushort Repeat { get; set; }
+
+        public GifskiSettings()
+        {
+            Quality = 90;
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential, Pack = 1)]
+    internal readonly struct GifskiSettingsInternal
+    {
+
+        public readonly uint Width;
+        public readonly uint Height;
+        public readonly byte Quality;
+        public readonly bool Fast;
+        public readonly ushort Repeat;
+
+        public GifskiSettingsInternal(GifskiSettings settings)
+        {
+            Width = settings.Width;
+            Height = settings.Height;
+            Quality = settings.Quality;
+            Fast = settings.Fast;
+            Repeat = settings.Repeat;
+        }
 
     }
 }
