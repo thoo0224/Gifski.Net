@@ -11,7 +11,7 @@ A .NET 5 wrapper for Gifski
 
 </div>
 
-## Example Usage
+## Examples for Usage
 
 ```cs
 using GifskiNet;
@@ -33,6 +33,6 @@ gifski.Finish();
 Install-Package Gifski.Net
 ```
 
-### Contribute
+### Contributions to this project
  
-I am open for any contribution.
+I am open for any contribution for any contributions to this particular open source project.
