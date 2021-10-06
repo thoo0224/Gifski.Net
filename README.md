@@ -1,5 +1,4 @@
 # Gifski.Net
- Gifski wrapper for .NET 5
 
 <div align="center">
 
@@ -21,9 +20,9 @@ using var gifski = Gifski.Create(@"C:\Test\gifski.dll", settings =>
     settings.Quality = 100;
 });
 gifski.SetFileOutput(@"C:\Test\animation.gif");
-gifski.AddFramePngFile(0U, 0d, @"C:\Test\frame_1.gif");
-gifski.AddFramePngFile(1U, 4d, @"C:\Test\frame_2.gif");
-gifski.AddFramePngFile(3U, 6d, @"C:\Test\frame_3.gif");
+gifski.AddFramePngFile(0U, 0d, @"C:\Test\frame_1.png");
+gifski.AddFramePngFile(1U, 4d, @"C:\Test\frame_2.png");
+gifski.AddFramePngFile(3U, 6d, @"C:\Test\frame_3.png");
 gifski.Finish();
 ```
 
