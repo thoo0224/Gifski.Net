@@ -1,5 +1,3 @@
-# Gifski.Net
-
 <div align="center">
 
 # Gifski.Net
