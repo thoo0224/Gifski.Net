@@ -2,7 +2,7 @@
 
 # Gifski.Net
 
-A .NET 5 wrapper for Gifski
+Gifski wrapper for .NET 6
 
 [![GitHub release](https://img.shields.io/github/v/release/thoo0224/Gifski.Net?logo=github)](https://github.com/thoo0224/Gifski.Net/releases/latest) [![Nuget](https://img.shields.io/nuget/v/Gifski.Net?logo=nuget)](https://www.nuget.org/packages/Gifski.Net) [![Nuget DLs](https://img.shields.io/nuget/dt/Gifski.Net?logo=nuget)](https://www.nuget.org/packages/Gifski.Net) [![GitHub issues](https://img.shields.io/github/issues/thoo0224/Gifski.Net?logo=github)](https://github.com/thoo0224/Gifski.Net/issues) [![GitHub License](https://img.shields.io/github/license/thoo0224/Gifski.Net)](https://github.com/thoo0224/Gifski.Net/blob/master/LICENSE)
 
