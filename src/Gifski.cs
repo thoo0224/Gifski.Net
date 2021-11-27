@@ -17,10 +17,13 @@ public unsafe class Gifski : IDisposable
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgbaStride;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameArgb;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgb;
-    private readonly delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, void> _gifskiSetProgressCallback;
+    private readonly delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, GifskiError> _gifskiSetProgressCallback;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError> _gifskiSetFileOutput;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError> _gifskiSetWriteCallback;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, GifskiError> _gifskiFinish;
+
+    private ProgressCallback _progressCallback;
+    private WriteCallback _writeCallback;
 
     /// <summary>
     /// Initializes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
@@ -49,7 +52,7 @@ public unsafe class Gifski : IDisposable
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_argb");
         _gifskiAddFrameRgb = (delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_rgb");
-        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, void>)
+        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_set_progress_callback");
         _gifskiSetFileOutput = (delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_set_file_output");
@@ -90,11 +93,6 @@ public unsafe class Gifski : IDisposable
         return _gifskiAddFrameRgb(_gifskiHandle, frameNumber, width, height, bytesPerRow, pixels, presentationTimestamp);
     }
 
-    public void SetProgressCallback(IntPtr userData, ProgressCallback callback)
-    {
-        _gifskiSetProgressCallback(_gifskiHandle, callback, userData);
-    }
-
     public GifskiError SetFileOutput(string path)
     {
         return _gifskiSetFileOutput(_gifskiHandle, path);
@@ -102,7 +100,14 @@ public unsafe class Gifski : IDisposable
 
     public GifskiError SetWriteCallback(IntPtr userData, WriteCallback callback)
     {
+        _writeCallback = callback;
         return _gifskiSetWriteCallback(_gifskiHandle, callback, userData);
+    }
+
+    public GifskiError SetProgressCallback(IntPtr userData, ProgressCallback callback)
+    {
+        _progressCallback = callback;
+        return _gifskiSetProgressCallback(_gifskiHandle, callback, userData);
     }
 
     public GifskiError Finish()
