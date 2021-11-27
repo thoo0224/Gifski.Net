@@ -17,8 +17,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <Description>Gifski wrapper for .NET 6</Description>
-    <Version>1.0.4</Version>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.5</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
