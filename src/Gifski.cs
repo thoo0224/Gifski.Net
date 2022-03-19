@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Runtime.InteropServices;
 
 namespace GifskiNet;
@@ -8,9 +9,6 @@ public unsafe class Gifski : IDisposable
 
     public delegate int ProgressCallback(IntPtr userData);
     public delegate GifskiError WriteCallback(IntPtr bufferSize, IntPtr buffer, IntPtr userData);
-
-    private readonly IntPtr _dllHandle;
-    private readonly IntPtr _gifskiHandle;
 
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, string, double, GifskiError> _gifskiAddFramePngFile;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgba;
@@ -22,6 +20,10 @@ public unsafe class Gifski : IDisposable
     private readonly delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError> _gifskiSetWriteCallback;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, GifskiError> _gifskiFinish;
 
+    private readonly IntPtr _dllHandle;
+    private readonly IntPtr _gifskiHandle;
+
+    // Prevents the callbacks to be garbage collected
     private ProgressCallback _progressCallback;
     private WriteCallback _writeCallback;
 
@@ -29,7 +31,7 @@ public unsafe class Gifski : IDisposable
     /// Initializes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
     /// </summary>
     /// <param name="libraryPath">Path to the gifski binary.</param>
-    /// <param name="settings">Optional <see cref="GifskiSettings"/> modifications.</param>
+    /// <param name="settings">Optional <see cref="GifskiSettings"/>modifications.</param>
     public static Gifski Create(string libraryPath, Action<GifskiSettings> settings = null)
     {
         var gifskiSettings = new GifskiSettings();
@@ -96,6 +98,18 @@ public unsafe class Gifski : IDisposable
     public GifskiError SetFileOutput(string path)
     {
         return _gifskiSetFileOutput(_gifskiHandle, path);
+    }
+
+    public GifskiError SetStreamOutput(Stream stream)
+    {
+        return SetWriteCallback(IntPtr.Zero, (sizePtr, bufferPtr, _) =>
+        {
+            var size = sizePtr.ToInt32();
+            var buffer = new ReadOnlySpan<byte>(bufferPtr.ToPointer(), size);
+            stream.Write(buffer);
+
+            return GifskiError.OK;
+        });
     }
 
     public GifskiError SetWriteCallback(IntPtr userData, WriteCallback callback)
