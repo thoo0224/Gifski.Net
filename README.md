@@ -25,10 +25,6 @@ gifski.SetFileOutput(@"C:\Test\animation.gif");
 var stream = new MemoryStream();
 gifski.SetStreamOutput(stream);
 
-// You can also write this to memory instead by setting the write callback.
-var stream = new MemoryStream();
-gifski.SetWriteCallback(InPtr.Zero, (_)
-
 gifski.AddFramePngFile(0U, 0d, @"C:\Test\frame_1.png");
 gifski.AddFramePngFile(1U, 4d, @"C:\Test\frame_2.png");
 gifski.AddFramePngFile(3U, 6d, @"C:\Test\frame_3.png");
