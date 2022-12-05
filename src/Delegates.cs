@@ -70,7 +70,6 @@ internal static class Delegates
             gch = default;
             return default;
         }
-
         gch = GCHandle.FromIntPtr(contextPtr);
         return (TManaged)gch.Target;
     }
@@ -86,7 +85,6 @@ internal static class Delegates
             contextPtr = IntPtr.Zero;
             return default;
         }
-
         gch = GCHandle.Alloc(managedDel);
         contextPtr = GCHandle.ToIntPtr(gch);
         return nativeDel;
@@ -96,10 +94,6 @@ internal static class Delegates
 [AttributeUsage(AttributeTargets.Method)]
 internal sealed class MonoPInvokeCallbackAttribute : Attribute
 {
-    public MonoPInvokeCallbackAttribute(Type type)
-    {
-        Type = type;
-    }
-
+    public MonoPInvokeCallbackAttribute(Type type) => Type = type;
     public Type Type { get; }
 }
