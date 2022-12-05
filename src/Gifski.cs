@@ -7,25 +7,21 @@ namespace GifskiNet;
 public unsafe class Gifski : IDisposable
 {
 
-    public delegate int ProgressCallback(IntPtr userData);
-    public delegate GifskiError WriteCallback(IntPtr bufferSize, IntPtr buffer, IntPtr userData);
-
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, string, double, GifskiError> _gifskiAddFramePngFile;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgba;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgbaStride;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameArgb;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgb;
-    private readonly delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, GifskiError> _gifskiSetProgressCallback;
+    private readonly delegate* unmanaged[Cdecl]<IntPtr, ProgressCallbackProxy, IntPtr, GifskiError> _gifskiSetProgressCallback;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError> _gifskiSetFileOutput;
-    private readonly delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError> _gifskiSetWriteCallback;
+    private readonly delegate* unmanaged[Cdecl]<IntPtr, WriteCallbackProxy, IntPtr, GifskiError> _gifskiSetWriteCallback;
     private readonly delegate* unmanaged[Cdecl]<IntPtr, GifskiError> _gifskiFinish;
 
-    private readonly IntPtr _dllHandle;
-    private readonly IntPtr _gifskiHandle;
+    private IntPtr _dllHandle;
+    private IntPtr _gifskiHandle;
 
-    // Prevents the callbacks to be garbage collected
-    private ProgressCallback _progressCallback;
-    private WriteCallback _writeCallback;
+    private IntPtr _progressCallbackHandle;
+    private IntPtr _writeCallbackHandle;
 
     /// <summary>
     /// Initializes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
@@ -36,7 +32,6 @@ public unsafe class Gifski : IDisposable
     {
         var gifskiSettings = new GifskiSettings();
         settings?.Invoke(gifskiSettings);
-        if (gifskiSettings.Quality == 0) gifskiSettings.Quality = 90;
         return new Gifski(gifskiSettings, libraryPath);
     }
 
@@ -44,30 +39,48 @@ public unsafe class Gifski : IDisposable
     {
         _dllHandle = NativeLibrary.Load(libraryPath);
 
-        _gifskiAddFramePngFile = (delegate* unmanaged[Cdecl]<IntPtr, uint, string, double, GifskiError>)
+        _gifskiAddFramePngFile = (delegate* unmanaged[Cdecl]<nint, uint, string, double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_png_file");
-        _gifskiAddFrameRgba = (delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgba = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_rgba");
-        _gifskiAddFrameRgbaStride = (delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgbaStride = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_rgba_stride");
-        _gifskiAddFrameArgb = (delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameArgb = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_argb");
-        _gifskiAddFrameRgb = (delegate* unmanaged[Cdecl]<IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgb = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_add_frame_rgb");
-        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl]<IntPtr, ProgressCallback, IntPtr, GifskiError>)
+        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl]<nint, ProgressCallbackProxy, nint, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_set_progress_callback");
-        _gifskiSetFileOutput = (delegate* unmanaged[Cdecl]<IntPtr, string, GifskiError>)
+        _gifskiSetFileOutput = (delegate* unmanaged[Cdecl]<nint, string, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_set_file_output");
-        _gifskiSetWriteCallback = (delegate* unmanaged[Cdecl]<IntPtr, WriteCallback, IntPtr, GifskiError>)
+        _gifskiSetWriteCallback = (delegate* unmanaged[Cdecl]<nint, WriteCallbackProxy, nint, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_set_write_callback");
-        _gifskiFinish = (delegate* unmanaged[Cdecl]<IntPtr, GifskiError>)
+        _gifskiFinish = (delegate* unmanaged[Cdecl]<nint, GifskiError>)
             NativeLibrary.GetExport(_dllHandle, "gifski_finish");
 
-        var gifskiNew = (delegate* unmanaged[Cdecl]<ref GifskiSettingsInternal, IntPtr>)
+        var gifskiNew = (delegate* unmanaged[Cdecl]<GifskiSettingsInternal*, IntPtr>)
             NativeLibrary.GetExport(_dllHandle, "gifski_new");
 
         var internalSettings = new GifskiSettingsInternal(settings);
-        _gifskiHandle = gifskiNew(ref internalSettings);
+        _gifskiHandle = gifskiNew(&internalSettings);
+
+        if (settings.Extra && NativeLibrary.TryGetExport(_dllHandle, "gifski_set_extra_effort", out var gifskiSetExtraEffortAddr))
+        {
+            var gifskiSetExtraEffort = (delegate* unmanaged[Cdecl]<IntPtr, bool, GifskiError>)gifskiSetExtraEffortAddr;
+            gifskiSetExtraEffort(_gifskiHandle, true);
+        }
+
+        if (settings.MotionQuality.HasValue && NativeLibrary.TryGetExport(_dllHandle, "gifski_set_motion_quality", out var gifskiSetMotionQualityAddr))
+        {
+            var gifskiSetMotionQuality = (delegate* unmanaged[Cdecl]<IntPtr, byte, GifskiError>)gifskiSetMotionQualityAddr;
+            gifskiSetMotionQuality(_gifskiHandle, settings.MotionQuality.Value);
+        }
+
+        if (settings.LossyQuality.HasValue && NativeLibrary.TryGetExport(_dllHandle, "gifski_set_lossy_quality", out var gifskiSetLossyQualityAddr))
+        {
+            var gifskiSetLossyQuality = (delegate* unmanaged[Cdecl]<IntPtr, byte, GifskiError>)gifskiSetLossyQualityAddr;
+            gifskiSetLossyQuality(_gifskiHandle, settings.LossyQuality.Value);
+        }
     }
 
     public GifskiError AddFramePngFile(uint frameNumber, double presentationTimestamp, string filePath)
@@ -100,64 +113,88 @@ public unsafe class Gifski : IDisposable
         return _gifskiSetFileOutput(_gifskiHandle, path);
     }
 
+    public GifskiError SetProgressCallback(GifskiProgressCallback callback, object context = null)
+    {
+        ArgumentNullException.ThrowIfNull(callback, nameof(callback));
+        FreeGCHandleIfValid(ref _progressCallbackHandle);
+        var del = context is null
+            ? callback
+            : _ => callback(context);
+        var proxy = Delegates.Create(del, Delegates.ProgressCallbackProxy, out _, out var contextPtr);
+        _progressCallbackHandle = contextPtr;
+        return _gifskiSetProgressCallback(_gifskiHandle, proxy, contextPtr);
+    }
+
     public GifskiError SetStreamOutput(Stream stream)
     {
-        return SetWriteCallback(IntPtr.Zero, (sizePtr, bufferPtr, _) =>
+        ArgumentNullException.ThrowIfNull(stream, nameof(stream));
+        if (!stream.CanWrite)
+            throw new GifskiException("The given stream has no write access.");
+        FreeGCHandleIfValid(ref _writeCallbackHandle);
+        var del = new GifskiWriteCallback((bufferLength, bufferPtr, context) =>
         {
-            var size = sizePtr.ToInt32();
-            var buffer = new ReadOnlySpan<byte>(bufferPtr.ToPointer(), size);
-            stream.Write(buffer);
-
-            return GifskiError.OK;
+            var outStream = (Stream)context;
+            var span = new ReadOnlySpan<byte>(bufferPtr.ToPointer(), (int)bufferLength);
+            outStream.Write(span);
+            return true;
         });
+        var proxy = Delegates.Create(del, Delegates.WriteCallbackProxy, out _, out var contextPtr);
+        _writeCallbackHandle = contextPtr;
+        return _gifskiSetWriteCallback(_gifskiHandle, proxy, contextPtr);
     }
 
-    public GifskiError SetWriteCallback(IntPtr userData, WriteCallback callback)
+    public GifskiError SetWriteCallback(GifskiWriteCallback callback, object context = null)
     {
-        _writeCallback = callback;
-        return _gifskiSetWriteCallback(_gifskiHandle, callback, userData);
+        ArgumentNullException.ThrowIfNull(callback, nameof(callback));
+        FreeGCHandleIfValid(ref _writeCallbackHandle);
+        var del = context is null
+            ? callback
+            : (a, b, _) => callback(a, b, context);
+        var proxy = Delegates.Create(del, Delegates.WriteCallbackProxy, out _, out var contextPtr);
+        _writeCallbackHandle = contextPtr;
+        return _gifskiSetWriteCallback(_gifskiHandle, proxy, contextPtr);
     }
 
-    public GifskiError SetProgressCallback(IntPtr userData, ProgressCallback callback)
-    {
-        _progressCallback = callback;
-        return _gifskiSetProgressCallback(_gifskiHandle, callback, userData);
-    }
-
+    /// <summary>
+    /// Starts the encoding process. All configurations must happen before executing.
+    /// </summary>
+    /// <exception cref="GifskiException">Thrown when executed more than once.</exception>
     public GifskiError Finish()
     {
-        return _gifskiFinish(_gifskiHandle);
+        if (_gifskiHandle == IntPtr.Zero)
+            throw new GifskiException("You must not execute the 'Finish' function more than once!");
+
+        var result = _gifskiFinish(_gifskiHandle);
+        _gifskiHandle = IntPtr.Zero;
+        return result;
     }
 
-    public bool IsDisposed { get; private set; }
+    private static void FreeGCHandleIfValid(ref IntPtr ptr)
+    {
+        if (ptr == IntPtr.Zero) return;
+        var gch = GCHandle.FromIntPtr(ptr);
+        gch.Free();
+        ptr = IntPtr.Zero;
+    }
+
+    private void ReleaseUnmanagedResources()
+    {
+        if (_dllHandle != IntPtr.Zero)
+        {
+            NativeLibrary.Free(_dllHandle);
+            _dllHandle = IntPtr.Zero;
+        }
+
+        FreeGCHandleIfValid(ref _progressCallbackHandle);
+        FreeGCHandleIfValid(ref _writeCallbackHandle);
+    }
 
     public void Dispose()
     {
-        Dispose(true);
+        ReleaseUnmanagedResources();
         GC.SuppressFinalize(this);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
-        if (IsDisposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            if (_dllHandle != IntPtr.Zero)
-            {
-                NativeLibrary.Free(_dllHandle);
-            }
-        }
-
-        IsDisposed = true;
-    }
-
-    ~Gifski()
-    {
-        Dispose(false);
-    }
+    ~Gifski() => ReleaseUnmanagedResources();
 
 }
