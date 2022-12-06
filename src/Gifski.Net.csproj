@@ -17,7 +17,7 @@
     <NeutralLanguage>en</NeutralLanguage>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <Description>Gifski wrapper for .NET 6 &amp; 7</Description>
+    <Description>Gifski wrapper for .NET 7</Description>
     <Version>1.1.0</Version>
   </PropertyGroup>
 
