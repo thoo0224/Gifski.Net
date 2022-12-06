@@ -115,9 +115,6 @@ public unsafe class Gifski : IDisposable
     public GifskiError SetStreamOutput(Stream stream)
     {
         ArgumentNullException.ThrowIfNull(stream, nameof(stream));
-        if (!stream.CanWrite)
-            throw new GifskiException("The given stream has no write access.");
-        Util.FreeGCHandleIfValid(ref _writeCallbackHandle);
         var del = new GifskiWriteCallback((bufferLength, bufferPtr, context) =>
         {
             var outStream = (Stream)context;
@@ -125,9 +122,7 @@ public unsafe class Gifski : IDisposable
             outStream.Write(span);
             return true;
         });
-        var proxy = Delegates.Create(del, Delegates.WriteCallbackProxy, out _, out var contextPtr);
-        _writeCallbackHandle = contextPtr;
-        return _gifskiSetWriteCallback(_gifskiHandle, proxy, contextPtr);
+        return SetWriteCallback(del, stream);
     }
 
     public GifskiError SetWriteCallback(GifskiWriteCallback callback, object context = null)
