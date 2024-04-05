@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31515.178
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34723.18
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gifski.Net", ".\Gifski.Net.csproj", "{464BEBA9-153C-40E3-91C0-9E72A304AEB8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Gifski.Net", "Gifski.Net.csproj", "{BC88E711-EA3D-46C7-9E0C-AAA897484F75}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,16 +11,13 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{464BEBA9-153C-40E3-91C0-9E72A304AEB8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{464BEBA9-153C-40E3-91C0-9E72A304AEB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{464BEBA9-153C-40E3-91C0-9E72A304AEB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{464BEBA9-153C-40E3-91C0-9E72A304AEB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC88E711-EA3D-46C7-9E0C-AAA897484F75}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC88E711-EA3D-46C7-9E0C-AAA897484F75}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC88E711-EA3D-46C7-9E0C-AAA897484F75}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC88E711-EA3D-46C7-9E0C-AAA897484F75}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{464BEBA9-153C-40E3-91C0-9E72A304AEB8} = {4CE2EFEB-0C46-418C-B45A-DF087645AACD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {1B6BBBD5-F42A-455A-9062-31A9466C3F1C}
