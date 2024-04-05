@@ -6,21 +6,23 @@ namespace GifskiNet;
 
 public unsafe class Gifski : IDisposable
 {
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, uint, string, double, GifskiError> _gifskiAddFramePngFile;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgba;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgbaStride;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameArgb;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgb;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, ProgressCallbackProxy, IntPtr, GifskiError> _gifskiSetProgressCallback;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, string, GifskiError> _gifskiSetFileOutput;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, WriteCallbackProxy, IntPtr, GifskiError> _gifskiSetWriteCallback;
-    private readonly delegate* unmanaged[Cdecl] <IntPtr, GifskiError> _gifskiFinish;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, string, double, GifskiError> _gifskiAddFramePngFile;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgba;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgbaStride;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameArgb;
+    private readonly delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError> _gifskiAddFrameRgb;
+    private readonly delegate* unmanaged[Cdecl]<nint, ErrorMessageCallbackProxy, nint, GifskiError> _gifskiSetErrorMessageCallback;
+    private readonly delegate* unmanaged[Cdecl]<nint, ProgressCallbackProxy, nint, GifskiError> _gifskiSetProgressCallback;
+    private readonly delegate* unmanaged[Cdecl]<nint, WriteCallbackProxy, nint, GifskiError> _gifskiSetWriteCallback;
+    private readonly delegate* unmanaged[Cdecl]<nint, string, GifskiError> _gifskiSetFileOutput;
+    private readonly delegate* unmanaged[Cdecl]<nint, GifskiError> _gifskiFinish;
 
-    private IntPtr _libHandle;
-    private IntPtr _gifskiHandle;
+    private nint _libHandle;
+    private nint _gifskiHandle;
 
-    private IntPtr _progressCallbackHandle;
-    private IntPtr _writeCallbackHandle;
+    private nint _errorMessageCallbackHandle;
+    private nint _progressCallbackHandle;
+    private nint _writeCallbackHandle;
 
     /// <summary>
     /// Initializes <see cref="Gifski"/> with the recommended quality (<c>90</c>)
@@ -38,26 +40,28 @@ public unsafe class Gifski : IDisposable
     {
         _libHandle = NativeLibrary.Load(libraryPath);
 
-        _gifskiAddFramePngFile = (delegate* unmanaged[Cdecl] <IntPtr, uint, string, double, GifskiError>)
+        _gifskiAddFramePngFile = (delegate* unmanaged[Cdecl]<nint, uint, string, double, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_add_frame_png_file");
-        _gifskiAddFrameRgba = (delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgba = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_add_frame_rgba");
-        _gifskiAddFrameRgbaStride = (delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgbaStride = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_add_frame_rgba_stride");
-        _gifskiAddFrameArgb = (delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameArgb = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_add_frame_argb");
-        _gifskiAddFrameRgb = (delegate* unmanaged[Cdecl] <IntPtr, uint, uint, uint, uint, byte[], double, GifskiError>)
+        _gifskiAddFrameRgb = (delegate* unmanaged[Cdecl]<nint, uint, uint, uint, uint, byte[], double, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_add_frame_rgb");
-        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl] <IntPtr, ProgressCallbackProxy, IntPtr, GifskiError>)
+        _gifskiSetErrorMessageCallback = (delegate* unmanaged[Cdecl]<nint, ErrorMessageCallbackProxy, nint, GifskiError>)
+            NativeLibrary.GetExport(_libHandle, "gifski_set_error_message_callback");
+        _gifskiSetProgressCallback = (delegate* unmanaged[Cdecl]<nint, ProgressCallbackProxy, nint, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_set_progress_callback");
-        _gifskiSetFileOutput = (delegate* unmanaged[Cdecl] <IntPtr, string, GifskiError>)
-            NativeLibrary.GetExport(_libHandle, "gifski_set_file_output");
-        _gifskiSetWriteCallback = (delegate* unmanaged[Cdecl] <IntPtr, WriteCallbackProxy, IntPtr, GifskiError>)
+        _gifskiSetWriteCallback = (delegate* unmanaged[Cdecl]<nint, WriteCallbackProxy, nint, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_set_write_callback");
-        _gifskiFinish = (delegate* unmanaged[Cdecl] <IntPtr, GifskiError>)
+        _gifskiSetFileOutput = (delegate* unmanaged[Cdecl]<nint, string, GifskiError>)
+            NativeLibrary.GetExport(_libHandle, "gifski_set_file_output");
+        _gifskiFinish = (delegate* unmanaged[Cdecl]<nint, GifskiError>)
             NativeLibrary.GetExport(_libHandle, "gifski_finish");
 
-        var gifskiNew = (delegate* unmanaged[Cdecl] <GifskiSettingsInternal*, IntPtr>)
+        var gifskiNew = (delegate* unmanaged[Cdecl]<GifskiSettingsInternal*, nint>)
             NativeLibrary.GetExport(_libHandle, "gifski_new");
 
         var internalSettings = new GifskiSettingsInternal(settings);
@@ -65,19 +69,19 @@ public unsafe class Gifski : IDisposable
 
         if (settings.Extra && NativeLibrary.TryGetExport(_libHandle, "gifski_set_extra_effort", out var gifskiSetExtraEffortAddr))
         {
-            var gifskiSetExtraEffort = (delegate* unmanaged[Cdecl] <IntPtr, bool, GifskiError>)gifskiSetExtraEffortAddr;
+            var gifskiSetExtraEffort = (delegate* unmanaged[Cdecl]<nint, bool, GifskiError>)gifskiSetExtraEffortAddr;
             gifskiSetExtraEffort(_gifskiHandle, true);
         }
 
         if (settings.MotionQuality.HasValue && NativeLibrary.TryGetExport(_libHandle, "gifski_set_motion_quality", out var gifskiSetMotionQualityAddr))
         {
-            var gifskiSetMotionQuality = (delegate* unmanaged[Cdecl] <IntPtr, byte, GifskiError>)gifskiSetMotionQualityAddr;
+            var gifskiSetMotionQuality = (delegate* unmanaged[Cdecl]<nint, byte, GifskiError>)gifskiSetMotionQualityAddr;
             gifskiSetMotionQuality(_gifskiHandle, settings.MotionQuality.Value);
         }
 
         if (settings.LossyQuality.HasValue && NativeLibrary.TryGetExport(_libHandle, "gifski_set_lossy_quality", out var gifskiSetLossyQualityAddr))
         {
-            var gifskiSetLossyQuality = (delegate* unmanaged[Cdecl] <IntPtr, byte, GifskiError>)gifskiSetLossyQualityAddr;
+            var gifskiSetLossyQuality = (delegate* unmanaged[Cdecl]<nint, byte, GifskiError>)gifskiSetLossyQualityAddr;
             gifskiSetLossyQuality(_gifskiHandle, settings.LossyQuality.Value);
         }
     }
@@ -99,6 +103,18 @@ public unsafe class Gifski : IDisposable
 
     public GifskiError SetFileOutput(string path) =>
         _gifskiSetFileOutput(_gifskiHandle, path);
+
+    public GifskiError SetErrorMessageCallback(GifskiErrorMessageCallback callback, object context = null)
+    {
+        ArgumentNullException.ThrowIfNull(callback, nameof(callback));
+        Util.FreeGCHandleIfValid(ref _errorMessageCallbackHandle);
+        var del = context is null
+            ? callback
+            : (a, _) => callback(a, context);
+        var proxy = Delegates.Create(del, Delegates.ErrorCallbackProxy, out _, out var contextPtr);
+        _errorMessageCallbackHandle = contextPtr;
+        return _gifskiSetErrorMessageCallback(_gifskiHandle, proxy, contextPtr);
+    }
 
     public GifskiError SetProgressCallback(GifskiProgressCallback callback, object context = null)
     {
@@ -143,16 +159,17 @@ public unsafe class Gifski : IDisposable
     /// <exception cref="GifskiException">Thrown when executed more than once.</exception>
     public GifskiError Finish()
     {
-        if (_gifskiHandle == IntPtr.Zero)
+        if (_gifskiHandle == nint.Zero)
             throw new GifskiException("You must not execute the 'Finish' function more than once!");
         var result = _gifskiFinish(_gifskiHandle);
-        _gifskiHandle = IntPtr.Zero;
+        _gifskiHandle = nint.Zero;
         return result;
     }
 
     private void ReleaseUnmanagedResources()
     {
         Util.FreeLibraryIfValid(ref _libHandle);
+        Util.FreeGCHandleIfValid(ref _errorMessageCallbackHandle);
         Util.FreeGCHandleIfValid(ref _progressCallbackHandle);
         Util.FreeGCHandleIfValid(ref _writeCallbackHandle);
     }

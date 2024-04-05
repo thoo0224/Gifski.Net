@@ -5,18 +5,18 @@ namespace GifskiNet;
 
 internal static class Util
 {
-    public static void FreeGCHandleIfValid(ref IntPtr ptr)
+    public static void FreeGCHandleIfValid(ref nint ptr)
     {
-        if (ptr == IntPtr.Zero) return;
+        if (ptr == nint.Zero) return;
         var gch = GCHandle.FromIntPtr(ptr);
         gch.Free();
-        ptr = IntPtr.Zero;
+        ptr = nint.Zero;
     }
 
-    public static void FreeLibraryIfValid(ref IntPtr handle)
+    public static void FreeLibraryIfValid(ref nint handle)
     {
-        if (handle == IntPtr.Zero) return;
+        if (handle == nint.Zero) return;
         NativeLibrary.Free(handle);
-        handle = IntPtr.Zero;
+        handle = nint.Zero;
     }
 }
